@@ -1,44 +1,28 @@
-import { getProductDetail } from '../api/api.js';
+import { getProduct } from '../api/api.js';
 import LocalStorageUtil from '../utils/localStorage.js';
 import { routeChange } from '../utils/route.js';
 import Cart from './Cart.js';
 
 export default function CartPage({ $target }) {
-  const $page = document.createElement('div');
-  $page.className = 'CartPage';
-
-  $page.innerHTML = '<h1>장바구니</h1>'
-
-  let cartComponent = null;
-
-  this.setState = (nextState) => {
-    this.state = nextState;
-    this.render();
-  }
-
-  const cartData = LocalStorageUtil.getItem('products_cart', []);
+  this.$page;
+  this.cartComponent;
+  this.cartData = [];
   this.state = {
     products: null
   }
 
-  this.render = () => {
-    if (cartData.length === 0) {
-      alert('장바구니가 비어있습니다.')
-      routeChange('/web/');
-    } else {
-      $target.appendChild($page);
-      if (this.state.products && !cartComponent) {
-        cartComponent = new Cart({
-          $target: $page,
-          initState: this.state.products
-        })
-      }
-    }
-  }
+  this.init = async () => {
+    this.$page = document.createElement('div');
+    this.$page.className = 'CartPage';
+    this.$page.innerHTML = '<h1>장바구니</h1>'
 
-  this.fetchProducts = async () => {
-    const products = await Promise.all(cartData.map(async (cartItem) => {
-      const product = await getProductDetail(productId);
+    this.cartComponent = null;
+
+    this.cartData = LocalStorageUtil.getItem('products_cart') || [];
+    console.log(this.cartData);
+
+    const products = await Promise.all(this.cartData.map(async (cartItem) => {
+      const product = await getProduct({ id: cartItem.productId });
       const selectedOption = product.productOptions.find(option => option.id === cartItem.optionId);
 
       return {
@@ -49,10 +33,30 @@ export default function CartPage({ $target }) {
         optionName: selectedOption.name,
         optionPrice: selectedOption.price
       }
-    }))
+    }));
 
     this.setState({ products });
   }
 
-  this.fetchProducts();
+  this.setState = (nextState) => {
+    this.state = nextState;
+    this.render();
+  }
+
+  this.render = () => {
+    if (this.cartData.length === 0) {
+      alert('장바구니가 비어있습니다.');
+      routeChange('/');
+    } else {
+      $target.appendChild(this.$page);
+      if (this.state.products && !this.cartComponent) {
+        this.cartComponent = new Cart({
+          $target: this.$page,
+          initState: this.state.products
+        });
+      }
+    }
+  }
+
+  this.init();
 }

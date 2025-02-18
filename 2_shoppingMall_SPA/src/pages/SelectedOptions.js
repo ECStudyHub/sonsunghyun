@@ -2,10 +2,15 @@ import LocalStorageUtil from '../utils/localStorage.js';
 import { routeChange } from '../utils/route.js';
 
 export default function SelectedOptions({ $target, initState }) {
-  const $component = document.createElement('div');
-  $target.appendChild($component);
+  this.$component;
+  this.state;
 
-  this.state = initState;
+  this.init = () => {
+    this.$component = document.createElement('div');
+    $target.appendChild(this.$component);
+
+    this.state = initState;
+  }
 
   this.getTotalPrice = () => {
     const { product, selectedOptions } = this.state;
@@ -24,43 +29,45 @@ export default function SelectedOptions({ $target, initState }) {
   this.render = () => {
     const { product, selectedOptions = [] } = this.state;
     if (product && selectedOptions) {
-      $component.innerHTML = `
+      this.$component.innerHTML = `
         <h3>선택된 상품</h3>
         <ul>
           ${selectedOptions.map(selectedOption => `
             <li>
-              ${selectedOption.optionName} ${product.price + selectedOption.optionPrice}원
+              ${selectedOption.optionName} ${(product.price + selectedOption.optionPrice).toLocaleString()}원
               <input type="text" data-optionId="${selectedOption.optionId}" value="${selectedOption.quantity}">
             <li>
           `).join('')}
         </ul>
-        <div class="ProductDetail__totalPrice">${this.getTotalPrice()}원</div>
+        <div class="ProductDetail__totalPrice">${this.getTotalPrice().toLocaleString()}원</div>
         <button class="OrderButton">주문하기</button>
       `
     }
   }
 
+  this.init();
   this.render();
 
-  $component.addEventListener('click', (e) => {
+  this.$component.addEventListener('click', (e) => {
     const { selectedOptions } = this.state;
-    if (e.target.className === 'OrderButton') {
-      const cartData = LocalStorageUtil.getItem('products_cart', []);
-      LocalStorageUtil.setItem('products_cart', cartData.concat(selectedOptions.map(selectedOption => ({
+    if (e.target.className === 'OrderButton') { // 주문하기
+      const cartData = LocalStorageUtil.getItem('products_cart') || [];
+
+      LocalStorageUtil.setItem('products_cart', cartData?.concat(selectedOptions.map(selectedOption => ({
         productId: selectedOption.productId,
         optionId: selectedOption.optionId,
-        quantity: selectedOption.quantity
+        quantity: selectedOption.quantity,
       }))));
       
-      routeChange('/web/cart');
+      routeChange('/cart');
     }
   })
 
-  $component.addEventListener('change', e => {
+  this.$component.addEventListener('change', e => {
     if (e.target.tagName === 'INPUT') {
       try {
         const nextQuantity = parseInt(e.target.value);
-        const nextSelectedOptions = [...this.state.selectedOptions]
+        const nextSelectedOptions = [ ...this.state.selectedOptions ];
         
         if (typeof nextQuantity === 'number') {
           const { product } = this.state;
@@ -74,11 +81,11 @@ export default function SelectedOptions({ $target, initState }) {
           this.setState({
             ...this.state,
             selectedOptions: nextSelectedOptions
-          })
+          });
         }
       } catch (e) {
         console.log(e);
       }
     }
-  })
+  });
 }

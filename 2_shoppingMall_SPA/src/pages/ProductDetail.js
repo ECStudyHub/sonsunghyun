@@ -1,23 +1,29 @@
 import SelectedOptions from './SelectedOptions.js';
 
 export default function ProductDetail({ $target, initState }) {
-    const $productDetail = document.createElement('div');
-    $productDetail.className = 'ProductDetail';
+    this.$productDetail;
+    this.state;
+    this.selectedOptions;
+    this.isInitialized;
 
-    $target.appendChild($productDetail);
+    this.init = () => {
+        this.$productDetail = document.createElement('div');
+        this.$productDetail.className = 'ProductDetail';
+        $target.appendChild(this.$productDetail);
 
-    this.state = initState;
-    let selectedOptions = null;
-    let isInitialized = false;
+        this.state = initState;
+        this.selectedOptions = null;
+        this.isInitialized = false;
+    }    
 
-    this.setState = nextState => {
+    this.setState = (nextState) => {
         this.state = nextState;
         this.render();
 
-        if (selectedOptions) {
-            selectedOptions.setState({
+        if (this.selectedOptions) {
+            this.selectedOptions.setState({
                 ...this.state,
-                selectedOptions: this.state.selectedOptions
+                selectedOptions: this.state.selectedOptions,
             });
         }
     }
@@ -25,8 +31,8 @@ export default function ProductDetail({ $target, initState }) {
     this.render = () => {
         const { product } = this.state;
 
-        if (!isInitialized) {
-            $productDetail.innerHTML = `
+        if (!this.isInitialized) {
+            this.$productDetail.innerHTML = `
                 <img src="${product.imageUrl}">
                 <div class="ProductDetail__info">
                     <h2>${product.name}</h2>
@@ -34,28 +40,34 @@ export default function ProductDetail({ $target, initState }) {
                     <select>
                         <option>선택하세요.</option>
                         ${product.productOptions.map(option => `
-                            <option value="${option.id}" ${option.stock === 0 ? 'disable' : ''}>
-                                ${option.stock === 0 ? '(품절) ' : ''}${product.name} ${option.name} ${option.price > 0 ? `(+${option.price.toLocaleString()}원)` : ''}
+                            <option value="${option.id}" ${option.stock === 0 ? 'disabled' : ''}>
+                                ${option.stock === 0 ? '(품절) ' : ''}${product.name} ${option.name} ${option.price > 0 
+                                    ?
+                                    `(+${option.price.toLocaleString()}원)` : ''}
                             </option>
                         `).join('')}
                     </select>
                     <div class="ProductDetail__selectedOptions"></div>
                 </div>
             `
-            selectedOptions = new SelectedOptions({
-                $target: $productDetail.querySelector('.ProductDetail__selectedOptions'),
+
+            this.selectedOptions = new SelectedOptions({
+                $target: this.$productDetail.querySelector('.ProductDetail__selectedOptions'),
                 initState: {
                     product: this.state.product,
                     selectedOptions: this.state.selectedOptions
                 }
             });
-            isInitialized = true;
+
+            this.isInitialized = true;
         }
     }
 
+    this.init();
     this.render();
 
-    $productDetail.addEventListener('change', (e) => {
+    // 이벤트 위임으로 이벤트 핸들링 
+    this.$productDetail.addEventListener('change', (e) => {
         if (e.target.tagName === 'SELECT') {
             const selectedOptionId = parseInt(e.target.value);
             const { product, selectedOptions } = this.state;
@@ -73,6 +85,7 @@ export default function ProductDetail({ $target, initState }) {
                         quantity: 1
                     }
                 ];
+
                 this.setState({
                     ...this.state,
                     selectedOptions: nextSelectedOptions

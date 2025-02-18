@@ -1,18 +1,30 @@
-import { getProductDetail } from '../api/api.js';
+import { getProduct } from '../api/api.js';
 import ProductDetail from './ProductDetail.js';
 
 export default function ProductDetailPage({ $target, productId }) {
+  this.$page;
   this.state = {
     productId,
-    product: null
+    product: null,
   }
 
-  const $page = document.createElement('div');
-  $page.className = 'ProductDetailPage';
+  this.init = async () => {
+    this.$page = document.createElement('div');
+    this.$page.className = 'ProductDetailPage';
+    this.$page.innerHTML = '<h1>상품 정보</h1>';
 
-  $page.innerHTML = '<h1>상품 정보</h1>'
+    const { productId } = this.state;
+    const product = await getProduct({
+        id: productId
+    });
+    
+    this.setState({
+      ...this.state,
+      product
+    });
+  }
 
-  this.setState = nextState => {
+  this.setState = (nextState) => {
     this.state = nextState;
     this.render();
   }
@@ -22,28 +34,17 @@ export default function ProductDetailPage({ $target, productId }) {
       $target.innerHTML = 'Loading...';
     } else {
       $target.innerHTML = '';
-      $target.appendChild($page);
-      //ProductDetail 렌더링하기
+      $target.appendChild(this.$page);
 
       new ProductDetail({
-        $target: $page,
+        $target: this.$page,
         initState: {
           product: this.state.product,
-          selectedOptions: []
-        }
-      })
+          selectedOptions: [],
+        },
+      });
     }
   }
 
-  this.fetchProduct = async () => {
-    const { productId } = this.state;
-    const product = await getProductDetail(productId);
-    
-    this.setState({
-      ...this.state,
-      product
-    });
-  }
-
-  this.fetchProduct();
+  this.init();
 }

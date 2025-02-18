@@ -2,13 +2,18 @@ import { routeChange } from '../utils/route.js';
 import LocalStorageUtil from '../utils/localStorage.js';
 
 export default function Cart({ $target, initState }) {
-  const $component = document.createElement('div');
-  $component.className = 'Cart';
-  this.state = initState;
+  this.$component;
+  this.state;
 
-  $target.appendChild($component);
+  this.init = () => {
+    this.$component = document.createElement('div');
+    this.$component.className = 'Cart';
+    this.state = initState;
 
-  this.setState = nextState => {
+    $target.appendChild(this.$component);
+  }
+
+  this.setState = (nextState) => {
     this.state = nextState;
     this.render();
   }
@@ -19,7 +24,7 @@ export default function Cart({ $target, initState }) {
   }
 
   this.render = () => {
-    $component.innerHTML = `
+    this.$component.innerHTML = `
       <ul>
         ${this.state.map(cartItem => `
           <li class="Cart__item">
@@ -32,21 +37,21 @@ export default function Cart({ $target, initState }) {
         `).join('')}
       </ul>
       <div class="Cart__totalPrice">
-        총 상품가격 ${this.getTotalPrice()}원
+        총 상품가격 ${this.getTotalPrice().toLocaleString()}원
       </div>
       <button class="OrderButton">주문하기</button>    
     `
-
-    return $component;
+    // return this.$component;
   }
 
+  this.init();
   this.render();
 
-  $component.addEventListener('click', e => {
+  this.$component.addEventListener('click', e => {
       if (e.target.className === 'OrderButton') {
       alert('주문 되었습니다!');
       LocalStorageUtil.removeItem('products_cart');
-      routeChange('/web/');
+      routeChange('/');
     }
   })
 }
