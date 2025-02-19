@@ -1,5 +1,5 @@
 import { getProduct } from '../api/api.js';
-import ProductDetail from './ProductDetail.js';
+import ProductDetail from '../components/ProductDetail.js';
 
 export default function ProductDetailPage({ $target, productId }) {
   this.$page;

@@ -1,27 +1,26 @@
 import SelectedOptions from './SelectedOptions.js';
+import { priceDelimiter } from '../utils/delimiter.js';
 
 export default function ProductDetail({ $target, initState }) {
-    this.$productDetail;
+    this.$component;
     this.state;
-    this.selectedOptions;
-    this.isInitialized;
+    this.selectedOptionsComponent = null;
+    this.isInitialized = false;
 
     this.init = () => {
-        this.$productDetail = document.createElement('div');
-        this.$productDetail.className = 'ProductDetail';
-        $target.appendChild(this.$productDetail);
+        this.$component = document.createElement('div');
+        this.$component.className = 'ProductDetail';
+        $target.appendChild(this.$component);
 
-        this.state = initState;
-        this.selectedOptions = null;
-        this.isInitialized = false;
+        this.setState(initState);
     }    
 
     this.setState = (nextState) => {
         this.state = nextState;
         this.render();
 
-        if (this.selectedOptions) {
-            this.selectedOptions.setState({
+        if (this.selectedOptionsComponent) {
+            this.selectedOptionsComponent.setState({
                 ...this.state,
                 selectedOptions: this.state.selectedOptions,
             });
@@ -32,18 +31,17 @@ export default function ProductDetail({ $target, initState }) {
         const { product } = this.state;
 
         if (!this.isInitialized) {
-            this.$productDetail.innerHTML = `
+            this.$component.innerHTML = `
                 <img src="${product.imageUrl}">
                 <div class="ProductDetail__info">
                     <h2>${product.name}</h2>
-                    <div class="ProductDetail__price">${product.price}원~</div>
+                    <div class="ProductDetail__price">${priceDelimiter(product.price)}원~</div>
                     <select>
                         <option>선택하세요.</option>
                         ${product.productOptions.map(option => `
                             <option value="${option.id}" ${option.stock === 0 ? 'disabled' : ''}>
-                                ${option.stock === 0 ? '(품절) ' : ''}${product.name} ${option.name} ${option.price > 0 
-                                    ?
-                                    `(+${option.price.toLocaleString()}원)` : ''}
+                                ${option.stock === 0 ? '(품절) ' : ''}${product.name} ${option.name} 
+                                ${option.price > 0 ? `(+${priceDelimiter(option.price)}원)` : ''}
                             </option>
                         `).join('')}
                     </select>
@@ -51,8 +49,8 @@ export default function ProductDetail({ $target, initState }) {
                 </div>
             `
 
-            this.selectedOptions = new SelectedOptions({
-                $target: this.$productDetail.querySelector('.ProductDetail__selectedOptions'),
+            this.selectedOptionsComponent = new SelectedOptions({
+                $target: this.$component.querySelector('.ProductDetail__selectedOptions'),
                 initState: {
                     product: this.state.product,
                     selectedOptions: this.state.selectedOptions
@@ -64,10 +62,8 @@ export default function ProductDetail({ $target, initState }) {
     }
 
     this.init();
-    this.render();
 
-    // 이벤트 위임으로 이벤트 핸들링 
-    this.$productDetail.addEventListener('change', (e) => {
+    this.$component.addEventListener('change', (e) => {
         if (e.target.tagName === 'SELECT') {
             const selectedOptionId = parseInt(e.target.value);
             const { product, selectedOptions } = this.state;

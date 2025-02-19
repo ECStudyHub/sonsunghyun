@@ -7,7 +7,7 @@ export default function App() {
     const $app = document.querySelector(".App");
 
     this.route = () => {
-        const { pathname } = location // pathname === /2_shoppingMall_SPA/index.html
+        const { pathname } = location
         console.log(pathname);
         const routePath = pathname.replace('/2_shoppingMall_SPA', '');
         
@@ -31,7 +31,7 @@ export default function App() {
         this.route();
     });
 
-    // ROUTE_CHANGE 이벤트 발생 시 마다 App의 this.route 함수가 호출되게 하는 효과
+    // custom 이벤트 발생 시 마다 라우팅
     init(this.route);
     
     this.route();

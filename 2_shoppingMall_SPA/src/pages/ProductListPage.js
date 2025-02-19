@@ -1,6 +1,7 @@
 import { getProduct } from '../api/api.js';
-import LocalStorageUtil from '../utils/localStorage.js';
+import { getItemFromLocalStorage, setItemFromLocalStorage } from '../utils/localStorage.js';
 import { routeChange } from '../utils/route.js';
+import { priceDelimiter } from '../utils/delimiter.js'
 
 // product = {
 //     id: number;
@@ -17,14 +18,11 @@ export default function ProductListPage({ $target }) {
         this.$page.className = 'ProductListPage';
         $target.appendChild(this.$page);
       
-        this.productList = LocalStorageUtil.getItem('productList');
+        this.productList = getItemFromLocalStorage('productList');
         
         if(this.productList == null) {
-            this.productList = await getProduct({
-                setLoading: () => {}, 
-                finishLoading: () => {},
-            });
-            LocalStorageUtil.setItem('productList', this.productList);
+            this.productList = await getProduct();
+            setItemFromLocalStorage('productList', this.productList);
         }
     }
 
@@ -37,7 +35,7 @@ export default function ProductListPage({ $target }) {
                         <img src=${product.imageUrl} />
                         <div class="Product__info">
                             <div>${product.name}</div>
-                            <div>${product.price.toLocaleString()} ~</div>
+                            <div>${priceDelimiter(product.price)}원 ~</div>
                         </div>
                     </li>`
                 )).join('')}

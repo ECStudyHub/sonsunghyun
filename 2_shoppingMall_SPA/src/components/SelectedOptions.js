@@ -1,5 +1,6 @@
-import LocalStorageUtil from '../utils/localStorage.js';
+import { getItemFromLocalStorage, setItemFromLocalStorage } from '../utils/localStorage.js';
 import { routeChange } from '../utils/route.js';
+import { priceDelimiter } from '../utils/delimiter.js';
 
 export default function SelectedOptions({ $target, initState }) {
   this.$component;
@@ -9,9 +10,10 @@ export default function SelectedOptions({ $target, initState }) {
     this.$component = document.createElement('div');
     $target.appendChild(this.$component);
 
-    this.state = initState;
+    this.setState(initState);
   }
 
+  // 총 가격 계산
   this.getTotalPrice = () => {
     const { product, selectedOptions } = this.state;
     const { price: productPrice } = product;
@@ -27,14 +29,14 @@ export default function SelectedOptions({ $target, initState }) {
   }
 
   this.render = () => {
-    const { product, selectedOptions = [] } = this.state;
+    const { product, selectedOptions } = this.state;
     if (product && selectedOptions) {
       this.$component.innerHTML = `
         <h3>선택된 상품</h3>
         <ul>
           ${selectedOptions.map(selectedOption => `
             <li>
-              ${selectedOption.optionName} ${(product.price + selectedOption.optionPrice).toLocaleString()}원
+              ${selectedOption.optionName} ${priceDelimiter(product.price + selectedOption.optionPrice)}원
               <input type="text" data-optionId="${selectedOption.optionId}" value="${selectedOption.quantity}">
             <li>
           `).join('')}
@@ -46,14 +48,13 @@ export default function SelectedOptions({ $target, initState }) {
   }
 
   this.init();
-  this.render();
 
   this.$component.addEventListener('click', (e) => {
     const { selectedOptions } = this.state;
     if (e.target.className === 'OrderButton') { // 주문하기
-      const cartData = LocalStorageUtil.getItem('products_cart') || [];
+      const cartData = getItemFromLocalStorage('products_cart') || [];
 
-      LocalStorageUtil.setItem('products_cart', cartData?.concat(selectedOptions.map(selectedOption => ({
+      setItemFromLocalStorage('products_cart', cartData?.concat(selectedOptions.map(selectedOption => ({
         productId: selectedOption.productId,
         optionId: selectedOption.optionId,
         quantity: selectedOption.quantity,
@@ -65,26 +66,23 @@ export default function SelectedOptions({ $target, initState }) {
 
   this.$component.addEventListener('change', e => {
     if (e.target.tagName === 'INPUT') {
-      try {
-        const nextQuantity = parseInt(e.target.value);
-        const nextSelectedOptions = [ ...this.state.selectedOptions ];
+      let nextQuantity = parseInt(e.target.value);
+      nextQuantity = nextQuantity <= 0 || Number.isNaN(nextQuantity) ? 1 : nextQuantity;
+      const nextSelectedOptions = [ ...this.state.selectedOptions ];
+      
+      if (typeof nextQuantity === 'number') {
+        const { product } = this.state;
+
+        const optionId = parseInt(e.target.dataset.optionid);
+        const option = product.productOptions.find(option => option.id === optionId);
+        const selectedOptionIndex = nextSelectedOptions.findIndex(selectedOption => selectedOption.optionId === optionId);
+
+        nextSelectedOptions[selectedOptionIndex].quantity = option.stock >= nextQuantity ? nextQuantity : option.stock;
         
-        if (typeof nextQuantity === 'number') {
-          const { product } = this.state;
-
-          const optionId = parseInt(e.target.dataset.optionid);
-          const option = product.productOptions.find(option => option.id === optionId);
-          const selectedOptionIndex = nextSelectedOptions.findIndex(selectedOption => selectedOption.optionId === optionId);
-
-          nextSelectedOptions[selectedOptionIndex].quantity = option.stock >= nextQuantity ? nextQuantity : option.stock;
-          
-          this.setState({
-            ...this.state,
-            selectedOptions: nextSelectedOptions
-          });
-        }
-      } catch (e) {
-        console.log(e);
+        this.setState({
+          ...this.state,
+          selectedOptions: nextSelectedOptions
+        });
       }
     }
   });

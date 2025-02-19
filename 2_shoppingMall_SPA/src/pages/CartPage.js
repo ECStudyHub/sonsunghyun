@@ -1,14 +1,14 @@
 import { getProduct } from '../api/api.js';
-import LocalStorageUtil from '../utils/localStorage.js';
+import { getItemFromLocalStorage } from '../utils/localStorage.js';
 import { routeChange } from '../utils/route.js';
-import Cart from './Cart.js';
+import Cart from '../components/Cart.js';
 
 export default function CartPage({ $target }) {
   this.$page;
-  this.cartComponent;
+  this.cartComponent = null;
   this.cartData = [];
   this.state = {
-    products: null
+    products: null,
   }
 
   this.init = async () => {
@@ -16,10 +16,7 @@ export default function CartPage({ $target }) {
     this.$page.className = 'CartPage';
     this.$page.innerHTML = '<h1>장바구니</h1>'
 
-    this.cartComponent = null;
-
-    this.cartData = LocalStorageUtil.getItem('products_cart') || [];
-    console.log(this.cartData);
+    this.cartData = getItemFromLocalStorage('products_cart') || [];
 
     const products = await Promise.all(this.cartData.map(async (cartItem) => {
       const product = await getProduct({ id: cartItem.productId });
